@@ -47,6 +47,33 @@ def operations() -> set[str]:
     return ops
 
 
+def usecase() -> None:
+    """Structural checks for the use case diagram (h_uc.puml)."""
+    f = ROOT / "h_uc.puml"
+    if not f.exists():
+        return
+    text = f.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    ucs = {m.group(1) for line in lines
+           for m in [re.match(r'\s*usecase\s+"[^"]+"\s+as\s+(\w+)', line)] if m}
+    direct = {m.group(1) for line in lines for m in [re.match(r"\s*\w+\s*-->\s*(\w+)\s*$", line)] if m}
+    included = {m.group(1) for line in lines for m in [re.match(r"\s*\w+\s*\.\.>\s*(\w+)", line)] if m}
+
+    depth, inside = 0, []
+    for line in lines:
+        if re.match(r"\s*actor\s+", line) and depth:
+            inside.append(line.strip())
+        depth += line.count("{") - line.count("}")
+
+    check("usecase: actors outside the boundary", not inside, str(inside[:2]))
+    check("usecase: no requirement ids in names", not re.search(r"\(Req ", text))
+    check("usecase: no invalid stereotypes", not re.search(r"<<(reviews|extends)>>", text))
+    check("usecase: every use case reachable", not (ucs - direct - included),
+          str(sorted(ucs - direct - included)))
+    check("usecase: include targets not actor-invoked", not (included & direct),
+          str(sorted(included & direct)))
+
+
 def main() -> int:
     j = jar()
     if j:
@@ -83,6 +110,8 @@ def main() -> int:
         png = f.with_suffix(".png")
         if png.exists():
             check(f"png fresh: {f.stem}", png.stat().st_mtime >= f.stat().st_mtime)
+
+    usecase()
 
     for legacy in ("review-sequence.puml", "seq4.puml", "seq5.puml"):
         p = ROOT / legacy
