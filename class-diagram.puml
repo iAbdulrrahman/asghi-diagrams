@@ -115,6 +115,7 @@ class ReviewerProfile {
 
 class ReviewAssignment {
     - UUID reviewId
+    - DateTime createdAt
     - boolean isSpecialistReview
     - boolean isApproved
     - String reason

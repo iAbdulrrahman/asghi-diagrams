@@ -78,8 +78,11 @@ def main() -> int:
         check(f"ops exist: {f.stem}", not unknown, str(sorted(set(unknown))))
         check(f"facade boundary: {f.stem}", not leaked, str(sorted(set(leaked))))
 
+    # every source that has a committed render must have a current one
+    for f in sorted(ROOT.glob("*.puml")):
         png = f.with_suffix(".png")
-        check(f"png fresh: {f.stem}", png.exists() and png.stat().st_mtime >= f.stat().st_mtime)
+        if png.exists():
+            check(f"png fresh: {f.stem}", png.stat().st_mtime >= f.stat().st_mtime)
 
     for legacy in ("review-sequence.puml", "seq4.puml", "seq5.puml"):
         p = ROOT / legacy
