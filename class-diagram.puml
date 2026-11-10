@@ -76,7 +76,12 @@ abstract class UserRoleProfile {
 
 class LearnerProfile {
     - LearnerProgress progress
+    - TestSession currentSession[0..1]
     + TestSession startSession(passageId: UUID)
+    + void fetchPassage(passageId: UUID)
+    + void playAudio(playbackSpeed: float)
+    + boolean submitAnswer(questionId: UUID, answer: String)
+    + void finishSession()
     + void flagContent(content: ReviewableContent, reason: String)
 }
 
@@ -94,6 +99,7 @@ class Reputation {
 }
 
 class ContributorProfile {
+    + boolean claim(passageId: UUID)
     + void recordOrUploadAudio(passageId: UUID, audioFile: File)
     + void toggleTashkeel()
 }
@@ -101,6 +107,8 @@ class ContributorProfile {
 class ReviewerProfile {
     - boolean isSpecialist
     + ReviewAssignment assignReview(contentId: UUID)
+    + ReviewFeedback createFeedback(isFusha: boolean, dialectFree: boolean, audioQuality: int)
+    + void submitDecision(assignment: ReviewAssignment, feedback: ReviewFeedback, isApproved: boolean, reason: String)
     + File getAudioFile(assignment: ReviewAssignment)
     + AudioRecording[] pendingRecordings()
 }

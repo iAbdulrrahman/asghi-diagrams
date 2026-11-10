@@ -13,13 +13,19 @@ L -> LP : startSession(passageId)
 activate LP
 LP -> TS : new(sessionId, passageId, startedAt)
 activate TS
-LP --> L : session
+LP --> L : session started
 deactivate LP
 
-L -> TS : fetchPassage(passageId)
-TS --> L : passage text and audio
+L -> LP : fetchPassage(passageId)
+activate LP
+LP -> TS : fetchPassage(passageId)
+LP --> L : passage text and audio
+deactivate LP
 
-L -> TS : playAudio(playbackSpeed)
+L -> LP : playAudio(playbackSpeed)
+activate LP
+LP -> TS : playAudio(playbackSpeed)
+deactivate LP
 
 loop for each question in the test
     TS -> TS : nextQuestion()
@@ -27,9 +33,12 @@ loop for each question in the test
     activate P
     P --> TS : question
     deactivate P
-    TS --> L : question
+    TS --> LP : question
+    LP --> L : question
 
-    L -> TS : submitAnswer(questionId, answer)
+    L -> LP : submitAnswer(questionId, answer)
+    activate LP
+    LP -> TS : submitAnswer(questionId, answer)
     TS -> QR : new(questionId, submittedAnswer)
     activate QR
     QR -> QR : evaluate()
@@ -38,21 +47,25 @@ loop for each question in the test
     TS -> TS : totalScore updated
 
     alt correct
-        TS --> L : result with explanation
+        TS --> LP : result with explanation
     else wrong
-        TS --> L : correct answer with explanation
+        TS --> LP : correct answer with explanation
         TS -> TS : adaptDifficulty(isCorrect)
     end
+    LP --> L : feedback
+    deactivate LP
 end
 
-L -> TS : finishSession()
+L -> LP : finishSession()
+activate LP
+LP -> TS : finishSession()
 TS -> TS : finishedAt = now
 TS --> LP : session totals
 deactivate TS
-activate LP
-LP -> LPR : totalScore, totalTimeSpent and currentStreakDays updated
+LP -> LPR : update(totalScore, timeSpent)
 activate LPR
 deactivate LPR
+LP --> L : summary
 deactivate LP
 
 @enduml

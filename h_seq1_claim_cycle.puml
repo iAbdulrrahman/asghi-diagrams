@@ -7,24 +7,30 @@ participant "ContributorProfile" as CP
 participant "Passage" as P
 participant "AudioRecording" as AR
 
-CON -> P : claim(contributorId)
+CON -> CP : claim(passageId)
+activate CP
+CP -> P : claim(contributorId)
 activate P
 P -> P : isClaimExpired()
 
 alt claimed by someone else and not expired
-    P --> CON : false
+    P --> CP : false
 else already has a VERIFIED or PENDING_REVIEW recording
-    P --> CON : false
+    P --> CP : false
 else free, or the previous claim expired
     P -> P : claimedBy = contributorId, claimedAt = now
     P -> P : changeStatus(CLAIMED)
-    P --> CON : true
+    P --> CP : true
     note right : a claim expires CLAIM_TTL after claimedAt
 end
 deactivate P
+CP --> CON : accepted or refused
+deactivate CP
 
 opt reading the passage first
     CON -> CP : toggleTashkeel()
+    activate CP
+    deactivate CP
 end
 
 CON -> CP : recordOrUploadAudio(passageId, audioFile)

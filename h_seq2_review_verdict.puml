@@ -8,6 +8,7 @@ participant "ReviewAssignment" as RA
 participant "ReviewFeedback" as RF
 participant "ReviewableContent" as C
 participant "Passage" as P
+participant "AdminProfile" as AP
 actor Admin as ADM
 actor Contributor as CON
 
@@ -27,16 +28,25 @@ activate RP
 RP --> REV : audioFile
 deactivate RP
 
-REV -> RF : new(isFusha, dialectFree, audioQuality)
-RF --> REV : feedback
+REV -> RP : createFeedback(isFusha, dialectFree, audioQuality)
+activate RP
+RP -> RF : new(isFusha, dialectFree, audioQuality)
+RP --> REV : feedback
+deactivate RP
 
-activate RA
 alt not Fusha or dialect present
-    REV -> RA : recordDecision(feedback, false, reason)
+    REV -> RP : submitDecision(assignment, feedback, false, reason)
+    activate RP
+    RP -> RA : recordDecision(feedback, false, reason)
+    deactivate RP
 else criteria met
-    REV -> RA : recordDecision(feedback, isApproved, reason)
+    REV -> RP : submitDecision(assignment, feedback, isApproved, reason)
+    activate RP
+    RP -> RA : recordDecision(feedback, isApproved, reason)
+    deactivate RP
 end
 
+activate RA
 RA -> C : meetsThreshold()
 deactivate RA
 activate C
@@ -44,11 +54,11 @@ activate C
 alt threshold reached
     C -> C : verify()
 else reviewers disagree
-    C -> ADM : resolveDispute(reviewId, action)
-    activate ADM
-    ADM --> C : decision
-    deactivate ADM
-    C -> C : verify() | reject(reason)
+    note over C : conflicting verdicts are escalated to the Admin
+    ADM -> AP : resolveDispute(reviewId, action)
+    activate AP
+    AP -> C : verify() | reject(reason)
+    deactivate AP
 else still needs reviews
     C -> C : status stays PENDING_REVIEW
     note right : claim is kept while the recording is under review
