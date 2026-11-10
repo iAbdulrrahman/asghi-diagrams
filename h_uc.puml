@@ -1,57 +1,86 @@
 @startuml
 left to right direction
-skinparam shadowing false
-skinparam nodesep 18
-skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam nodesep 40
+skinparam ranksep 80
 skinparam defaultFontName Arial
-skinparam usecase {
-  BackgroundColor #FDFDF5
-  BorderColor #555555
-}
 
+' ==========================================
+' 1. LEFT ACTORS
+' ==========================================
 actor "Learner" as Learner
 actor "Contributor" as Contributor
-actor "Reviewer" as Reviewer
-actor "Admin" as Admin
-actor "AI Engine" as AI
 
-rectangle "Arabic Listening Practice App" {
+' ==========================================
+' 2. SYSTEM BOUNDARY
+' ==========================================
+rectangle "Crowdsourced Arabic Listening Practice App" {
+ 
+  ' --- LEARNER USE CASES ---
+  usecase "Browse & Play Verified Audio\n(Req 6.1)" as UC_Browse
+  usecase "Practice Listening & Take Tests\n(Req 6.2, 6.4, 6.5)" as UC_Practice
+  usecase "Track Learning Progress\n(Req 6.6)" as UC_Track
+  usecase "Flag problematic content\n(Req 6.7)" as UC_Flag
+  usecase "Download Audio for Offline\n(Req 6.8)" as UC_Offline
 
-  usecase "Register / manage profile" as UC_Account
-  usecase "Browse and listen" as UC_Browse
-  usecase "Take listening test" as UC_Test
-  usecase "Track progress" as UC_Progress
-  usecase "Flag content" as UC_Flag
+  ' --- CONTRIBUTOR USE CASES ---
+  usecase "Browse / Claim Passages\n(Req 4.1)" as UC_Claim
+  usecase "Record and Submit Audio\n(Req 4.2)" as UC_Record
+  usecase "View Rejection Feedback\n(Req 8)" as UC_Reject
 
-  usecase "Claim and record passage" as UC_Record
-  usecase "See rejection reason" as UC_Reject
-  usecase "Author questions" as UC_Author
+  ' --- SHARED BY EVERY ROLE ---
+  usecase "Register / Sign-in\n(Req 1.2)" as UC_Reg
+  usecase "Manage Profile\n(Req 1.3)" as UC_Profile
 
-  usecase "Verify recording" as UC_Verify
-  usecase "Review AI content" as UC_Review
-
-  usecase "Manage catalogue, users and reputation" as UC_Admin
-  usecase "Trigger AI generation" as UC_Gen
-
-  usecase "Generate passage and questions" as UC_AIGen
+  ' --- REVIEWER AND ADMIN USE CASES ---
+  usecase "Author Questions\n(Req 7.1)" as UC_Author
+  usecase "Verify submitted recording\n(Req 5.1)" as UC_Verify
+  usecase "Review AI-generated Text & Questions\n(Req 3.3, 7.3)" as UC_ReviewAI
+  usecase "Generate Passages/Questions with AI\n(Req 3.1, 3.2)" as UC_GenAI
+  usecase "Maintain Catalogue of Passages\n(Req 2)" as UC_Catalogue
+  usecase "Govern Content, Users, and Reputation\n(Req 10)" as UC_Govern
+  usecase "Actionable feedback on wrong answers\n(Req 9)" as UC_Feedback
 }
 
-Learner --> UC_Account
-Learner --> UC_Browse
-Learner --> UC_Test
-Learner --> UC_Progress
-Learner --> UC_Flag
+' ==========================================
+' 3. RIGHT ACTORS
+' ==========================================
+actor "Reviewer" as Reviewer
+actor "Admin" as Admin
+actor "AI Content Generator" as AI
 
+' ==========================================
+' 4. CONNECTIONS — grouped by actor, in the same order as the use cases above
+' ==========================================
+Learner --> UC_Browse
+Learner --> UC_Practice
+Learner --> UC_Track
+Learner --> UC_Flag
+Learner --> UC_Offline
+
+Contributor --> UC_Claim
 Contributor --> UC_Record
 Contributor --> UC_Reject
+
+Learner --> UC_Reg
+Contributor --> UC_Reg
+Reviewer --> UC_Reg
+Admin --> UC_Reg
+Learner --> UC_Profile
+Contributor --> UC_Profile
+Reviewer --> UC_Profile
+Admin --> UC_Profile
+
 Contributor --> UC_Author
-
+Reviewer --> UC_Author
+Admin --> UC_Author
 Reviewer --> UC_Verify
-Reviewer --> UC_Review
-
-Admin --> UC_Admin
-Admin --> UC_Gen
-
-AI --> UC_AIGen
+Reviewer --> UC_ReviewAI
+AI --> UC_GenAI
+Admin --> UC_Catalogue
+Admin --> UC_Govern
+UC_Practice ..> UC_Feedback : <<include>>
+UC_Reject .> UC_Record : <<extends>>
+UC_ReviewAI ..> UC_GenAI : <<reviews>>
 
 @enduml

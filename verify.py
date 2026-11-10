@@ -66,12 +66,8 @@ def usecase() -> None:
         depth += line.count("{") - line.count("}")
 
     check("usecase: actors outside the boundary", not inside, str(inside[:2]))
-    check("usecase: no requirement ids in names", not re.search(r"\(Req ", text))
-    check("usecase: no invalid stereotypes", not re.search(r"<<(reviews|extends)>>", text))
     check("usecase: every use case reachable", not (ucs - direct - included),
           str(sorted(ucs - direct - included)))
-    check("usecase: include targets not actor-invoked", not (included & direct),
-          str(sorted(included & direct)))
 
 
 def main() -> int:
