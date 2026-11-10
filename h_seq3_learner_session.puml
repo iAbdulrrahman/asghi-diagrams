@@ -5,9 +5,9 @@ autonumber
 actor Learner as L
 participant "LearnerProfile" as LP
 participant "TestSession" as TS
-participant "LearnerProgress" as LPR
 participant "Passage" as P
 participant "QuestionResponse" as QR
+participant "LearnerProgress" as LPR
 
 L -> LP : startSession(passageId)
 activate LP
