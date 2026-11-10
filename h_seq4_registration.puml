@@ -1,0 +1,45 @@
+@startuml
+title User Registration and Role Granting
+autonumber
+
+actor "New User" as USR
+participant "User" as U
+participant "LearnerProfile" as LP
+participant "ContributorProfile" as CP
+participant "ReviewerProfile" as RP
+
+USR -> U : register(emailOrPhone, password)
+activate U
+U --> USR : account created
+deactivate U
+
+USR -> U : completeProfile(displayName, level, roleInterest)
+activate U
+U -> U : displayName, arabicLevel and roleInterest set
+U --> USR : profile saved
+deactivate U
+
+USR -> U : addRole(roleInterest)
+activate U
+
+alt role == LEARNER
+    U -> LP : <<create>>(role)
+    activate LP
+    LP --> U : learnerProfile
+    deactivate LP
+else role == CONTRIBUTOR
+    U -> CP : <<create>>(role)
+    activate CP
+    CP --> U : contributorProfile
+    deactivate CP
+else role == REVIEWER
+    U -> RP : <<create>>(role)
+    activate RP
+    RP --> U : reviewerProfile
+    deactivate RP
+end
+
+U --> USR : UserRoleProfile
+deactivate U
+
+@enduml

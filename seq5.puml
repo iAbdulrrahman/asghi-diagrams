@@ -1,0 +1,45 @@
+@startuml
+title Content Flagging and Moderation
+autonumber
+
+actor Learner as LRN
+participant "LearnerProfile" as LP
+participant "ContentFlag" as CF
+participant "ReviewableContent\n(abstract)" as RC
+participant "AdminProfile" as AP
+actor Admin as ADM
+
+' (ClassDiagram – LearnerProfile.flagContent)
+LRN -> LP : flagContent(content, reason)
+activate LP
+LP -> CF : <<create>>(reason, status = PENDING)
+activate CF
+CF -> RC : <<reference>> content
+activate RC
+RC --> CF : ok
+deactivate RC
+CF --> LP : flagId
+deactivate CF
+LP --> LRN : flag submitted
+deactivate LP
+
+' (ClassDiagram – AdminProfile.resolveFlag)
+ADM -> AP : resolveFlag(flagId, newState)
+activate AP
+AP -> CF : status = newState
+activate CF
+CF --> AP : updated
+deactivate CF
+
+alt newState == ACTION_TAKEN
+    ' inferred: flag action implies content status change
+    AP -> RC : changeStatus(FLAGGED)
+    activate RC
+    RC --> AP : status = FLAGGED
+    deactivate RC
+else newState == NO_ACTION
+    note right of AP : content status unchanged
+end
+deactivate AP
+
+@enduml

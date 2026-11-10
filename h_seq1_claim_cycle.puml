@@ -1,0 +1,44 @@
+@startuml
+title Claim and recording submission
+autonumber
+
+actor Contributor as CON
+participant "ContributorProfile" as CP
+participant "Passage" as P
+participant "AudioRecording" as AR
+
+CON -> P : claim(contributorId)
+activate P
+P -> P : isClaimExpired()
+
+alt claimed by someone else and not expired
+    P --> CON : false
+else already has a VERIFIED or PENDING_REVIEW recording
+    P --> CON : false
+else free, or the previous claim expired
+    P -> P : claimedBy = contributorId, claimedAt = now
+    P -> P : changeStatus(CLAIMED)
+    P --> CON : true
+    note right : a claim expires CLAIM_TTL after claimedAt
+end
+deactivate P
+
+opt reading the passage first
+    CON -> CP : toggleTashkeel()
+end
+
+CON -> CP : recordOrUploadAudio(passageId, audioFile)
+activate CP
+CP -> P : addAudio(audioFile)
+activate P
+P -> AR : new(audioFile, duration, attribution)
+activate AR
+P -> AR : status = PENDING_REVIEW
+P -> P : claimedAt = null
+deactivate P
+deactivate AR
+deactivate CP
+
+note right of P : clock stops, claim is held until the verdict
+
+@enduml

@@ -1,0 +1,58 @@
+@startuml
+title User Registration and Role Granting
+autonumber
+
+actor "New User" as USR
+participant "User" as U
+participant "UserRoleProfile\n(abstract)" as URP
+participant "LearnerProfile" as LP
+participant "ContributorProfile" as CP
+participant "ReviewerProfile" as RP
+
+' (ClassDiagram – User.register)
+USR -> U : register(emailOrPhone, password)
+activate U
+U --> USR : account created
+deactivate U
+
+note right of U
+  GAP: displayName and arabicLevel are attributes on User,
+  but no completeProfile()/setters exist.
+  GAP: roleInterest attribute does not exist on User.
+end note
+
+' (ClassDiagram – User.addRole)
+USR -> U : addRole(roleInterest)
+activate U
+U -> URP : <<create>>(role)
+activate URP
+
+alt role == LEARNER
+    URP --> LP : <<instantiate>>
+    activate LP
+    LP --> U : learnerProfile
+    deactivate LP
+else role == CONTRIBUTOR
+    URP --> CP : <<instantiate>>
+    activate CP
+    CP --> U : contributorProfile
+    deactivate CP
+else role == REVIEWER
+    URP --> RP : <<instantiate>>
+    activate RP
+    RP --> U : reviewerProfile
+    deactivate RP
+end
+
+deactivate URP
+U --> USR : UserRoleProfile
+deactivate U
+
+note over USR, RP
+  GAP: class diagram has no role-approval workflow.
+  AdminProfile.manageUser(userId, action) is the closest,
+  but "action" is a generic String.
+  This diagram therefore models automatic role grant.
+end note
+
+@enduml

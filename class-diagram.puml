@@ -1,0 +1,286 @@
+@startuml
+
+enum UserRole <<Enumeration>> {
+    LEARNER
+    CONTRIBUTOR
+    REVIEWER
+    ADMIN
+}
+
+enum Difficulty <<Enumeration>> {
+    EASY
+    MEDIUM
+    HARD
+}
+
+enum Level <<Enumeration>> {
+    A1
+    A2
+    B1
+    B2
+    C1
+    C2
+}
+
+enum Origin <<Enumeration>> {
+    AI
+    HUMAN
+}
+
+enum AttributionType <<Enumeration>> {
+    SHOW_NAME
+    ANONYMOUS
+}
+
+enum QuestionType <<Enumeration>> {
+    MCQ
+    TRUE_FALSE
+    FILL_IN_BLANK
+    SHORT_ANSWER
+}
+
+enum ContentStatus <<Enumeration>> {
+    DRAFT
+    CLAIMED
+    PENDING_REVIEW
+    VERIFIED
+    REJECTED
+    FLAGGED
+}
+
+enum FlagStatus <<Enumeration>> {
+    PENDING
+    NO_ACTION
+    ACTION_TAKEN
+}
+
+class User {
+    - UUID userId
+    - String email[0..1]
+    - String phoneNo[0..1]
+    - String displayName
+    - String passwordHash
+    - Level arabicLevel
+    - UserRoleProfile[] userProfiles
+    + void register(emailOrPhone: String, password: String)
+    + void login(emailOrPhone: String, password: String)
+    + UserRoleProfile addRole(role: UserRole)
+    + void completeProfile(displayName: String, level: Level, roleInterest: UserRole)
+    + void removeRole(role: UserRole)
+}
+
+abstract class UserRoleProfile {
+    - UUID userRoleProfileId
+    - UserRole role
+}
+
+class LearnerProfile {
+    - LearnerProgress progress
+    + TestSession startSession(passageId: UUID)
+    + void flagContent(content: ReviewableContent, reason: String)
+}
+
+class LearnerProgress {
+    - int totalScore
+    - int totalTimeSpent
+    - int currentStreakDays
+    + void update(totalScore: int, timeSpent: int)
+}
+
+class Reputation {
+    - int score
+    - float approvalRate
+    - int totalSubmissions
+}
+
+class ContributorProfile {
+    + void recordOrUploadAudio(passageId: UUID, audioFile: File)
+    + void toggleTashkeel()
+}
+
+class ReviewerProfile {
+    - boolean isSpecialist
+    + ReviewAssignment assignReview(contentId: UUID)
+    + File getAudioFile(assignment: ReviewAssignment)
+    + AudioRecording[] pendingRecordings()
+}
+
+class ReviewAssignment {
+    - UUID reviewId
+    - boolean isSpecialistReview
+    - boolean isApproved
+    - String reason
+    + recordDecision(feedback: ReviewFeedback, isApproved: boolean, reason: String)
+}
+
+class ReviewFeedback {
+    - boolean isFusha
+    - int audioQuality[0..1]
+    - boolean dialectFree[0..1]
+    - String feedback
+}
+
+class AdminProfile {
+    + void assignSpecialistStatus(reviewerId: UUID)
+    + void resolveDispute(reviewId: UUID, action: String)
+    + void resolveFlag(flagId: UUID, newState: FlagStatus)
+    + void manageUser(userId: UUID, action: String)
+    + triggerAIGeneration(passageId: UUID)
+    + generateReport(period: String)
+}
+
+class ContentFlag {
+    - UUID flagId
+    - String reason
+    - FlagStatus status
+    + void resolve(newState: FlagStatus)
+}
+
+class Passage {
+    - UUID passageId
+    - UUID claimedBy[0..1]
+    - DateTime claimedAt[0..1]
+    - String text
+    - Level level
+    - String topic
+    - Duration duration
+    + boolean claim(contributorId: UUID)
+    + boolean isClaimExpired()
+    + void releaseClaim()
+    + void addQuestion(question: Question)
+    + void addAudio(audioFile: File)
+    + Question getQuestion(difficulty: Difficulty)
+    + {static} Passage[] browse(level: Level, topic: String, maxDuration: Duration)
+    + {static} Passage[] awaitingRecording()
+}
+
+abstract class ReviewableContent {
+    - UUID contentId
+    - UUID authorId[0..1]
+    - ContentStatus status
+    - Origin origin
+    - int approvalCount {derived}
+    + boolean meetsThreshold()
+    # changeStatus(newStatus: ContentStatus)
+    + void verify()
+    + void reject(reason: String)
+    + void markFlagged()
+}
+
+note left of ReviewableContent 
+    {authorId == null <=> origin == AI}
+end note
+
+class AudioRecording {
+    - File audioFile
+    - Duration duration
+    - AttributionType attribution
+}
+
+interface QuestionAuthor {
+    + authorQuestion(passageId: UUID, q: Question)
+    + generateQuestions(passageId: UUID, count: int)
+}
+
+class Question {
+    - UUID questionId
+    - QuestionType type
+    - String promptText
+    - String[] answers
+    - String correctAnswer
+    - String explanation
+    - String passageReference
+    - Difficulty difficulty
+    + void edit(prompt: String, answers: String[], correctAnswer: String, explanation: String)
+}
+
+class QuestionResponse {
+    - UUID responseId
+    - String submittedAnswer
+    - boolean isCorrect
+    + boolean evaluate()
+}
+
+class TestSession {
+    - UUID sessionId
+    - DateTime startedAt
+    - DateTime finishedAt[0..1]
+    - QuestionResponse[] questionResponses
+    - int totalScore
+    - Difficulty currentDifficulty
+    + void fetchPassage(passageId: UUID)
+    + void playAudio(playbackSpeed: float)
+    + boolean submitAnswer(questionId: UUID, answer: String)
+    + Question nextQuestion()
+    + void adaptDifficulty(isCorrect: boolean)
+    + void finishSession()
+}
+
+class AIEngine {
+    + void generatePassageText(passageId: UUID)
+    + void generateQuestions(passageId: UUID, countOfQuestion: int)
+}
+
+UserRoleProfile <|-- LearnerProfile : {role == LEARNER}
+UserRoleProfile <|-- ContributorProfile : {role == CONTRIBUTOR}
+UserRoleProfile <|-- ReviewerProfile : {role == REVIEWER}
+UserRoleProfile <|-- AdminProfile : {role == ADMIN}
+
+ContributorProfile ..|> QuestionAuthor
+ReviewerProfile    ..|> QuestionAuthor
+AdminProfile       ..|> QuestionAuthor
+
+Passage --|> ReviewableContent
+AudioRecording --|> ReviewableContent
+Question      --|> ReviewableContent
+
+User "1" *-- "1..*" UserRoleProfile : holds >
+note right of User
+    at least one of email/phone is non-null
+end note
+
+ContributorProfile "1" *-- "1" Reputation : builds >
+ContributorProfile "1" --> "0..*" AudioRecording : submits >
+ContributorProfile "1" --> "0..*" Question : authors >
+
+ReviewerProfile "1" *-- "1" Reputation : builds >
+ReviewerProfile "1" --> "0..*" ReviewAssignment : conducts >
+ReviewAssignment "1" *-- "0..1" ReviewFeedback : has >
+ReviewAssignment "0..*" <--> "1" ReviewableContent : reviews >
+note right of ReviewableContent
+    Approval requires either 1 specialist review, or 3 general reviews conducted by distinct reviewers.
+end note
+note right of ReviewAssignment
+    A reviewer must not be the author of the reviewed content. 
+end note
+ContentFlag "0..*" --> ReviewableContent : has >
+
+LearnerProfile "1" --> "0..*" TestSession : participates >
+LearnerProfile "1" *-- "1" LearnerProgress : tracks >
+note right of LearnerProgress 
+    Totals are derived from the learner's TestSession history.
+end note
+LearnerProfile "1" --> "0..*" ContentFlag : reports >
+
+Passage "1" *-- "0..*" AudioRecording : has >
+Passage "1" *-- "0..*" Question : has >
+
+note right of Passage
+  Claim system ensures that only one person records for a passage at a time.
+  Every claim has TTL usually about 72 hours to submit a recording.
+  A contributor can claim a passage only if it doesn't have valid or pending-review recording 
+  and that is not claimed by someone else.
+end note
+
+QuestionResponse "0..*" --> "1" Question : answers >
+
+TestSession "1" *-- "0..*" QuestionResponse : has >
+TestSession "0..*" --> "1" Passage : practises >
+
+Passage "0..*" <-- "1" AIEngine : generates <
+Question "0..*" <-- "1" AIEngine : generates <
+note right of AIEngine
+  AI-generated passages and questions are created with status = PENDING_REVIEW
+end note
+
+@enduml
