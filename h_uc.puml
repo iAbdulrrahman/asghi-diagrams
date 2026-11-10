@@ -1,93 +1,57 @@
 @startuml
 left to right direction
-skinparam packageStyle rectangle
 skinparam shadowing false
 skinparam nodesep 18
-skinparam ranksep 40
+skinparam ranksep 55
 skinparam defaultFontName Arial
+skinparam usecase {
+  BackgroundColor #FDFDF5
+  BorderColor #555555
+}
 
-' PlantUML stacks actors in the order their edges are declared, so the
-' connection blocks below are ordered to match the packages: each role
-' ends up level with its own block.
-actor "User" as User
 actor "Learner" as Learner
 actor "Contributor" as Contributor
 actor "Reviewer" as Reviewer
 actor "Admin" as Admin
 actor "AI Engine" as AI
 
-Learner --|> User
-Contributor --|> User
-Reviewer --|> User
-Admin --|> User
+rectangle "Arabic Listening Practice App" {
 
-rectangle "Crowdsourced Arabic Listening Practice App" {
+  usecase "Register / manage profile" as UC_Account
+  usecase "Browse and listen" as UC_Browse
+  usecase "Take listening test" as UC_Test
+  usecase "Track progress" as UC_Progress
+  usecase "Flag content" as UC_Flag
 
-  package "Account" {
-    usecase "Register / sign in" as UC_Reg
-    usecase "Manage profile" as UC_Profile
-  }
+  usecase "Claim and record passage" as UC_Record
+  usecase "See rejection reason" as UC_Reject
+  usecase "Author questions" as UC_Author
 
-  package "Practise" {
-    usecase "Browse verified audio" as UC_Browse
-    usecase "Take listening test" as UC_Test
-    usecase "Score answer with explanation" as UC_Score
-    usecase "Track progress" as UC_Track
-    usecase "Flag content" as UC_Flag
-    usecase "Download for offline" as UC_Offline
-  }
+  usecase "Verify recording" as UC_Verify
+  usecase "Review AI content" as UC_Review
 
-  package "Contribute" {
-    usecase "Claim passage" as UC_Claim
-    usecase "Record / upload audio" as UC_Record
-    usecase "See rejection reason" as UC_Reject
-  }
+  usecase "Manage catalogue, users and reputation" as UC_Admin
+  usecase "Trigger AI generation" as UC_Gen
 
-  package "Author and review" {
-    usecase "Author questions" as UC_Author
-    usecase "Verify recording" as UC_Verify
-    usecase "Review AI content" as UC_ReviewAI
-  }
-
-  package "Administer" {
-    usecase "Generate with AI" as UC_GenAI
-    usecase "Maintain catalogue" as UC_Catalogue
-    usecase "Govern users and reputation" as UC_Govern
-  }
+  usecase "Generate passage and questions" as UC_AIGen
 }
 
-' ---- account: every role, through the User actor ----
-User --> UC_Reg
-User --> UC_Profile
-
-' ---- learner ----
+Learner --> UC_Account
 Learner --> UC_Browse
 Learner --> UC_Test
-Learner --> UC_Track
+Learner --> UC_Progress
 Learner --> UC_Flag
-Learner --> UC_Offline
 
-' ---- contributor ----
-Contributor --> UC_Claim
 Contributor --> UC_Record
 Contributor --> UC_Reject
 Contributor --> UC_Author
 
-' ---- reviewer ----
 Reviewer --> UC_Verify
-Reviewer --> UC_ReviewAI
-Reviewer --> UC_Author
+Reviewer --> UC_Review
 
-' ---- admin ----
-Admin --> UC_Author
-Admin --> UC_Catalogue
-Admin --> UC_Govern
-Admin --> UC_GenAI
+Admin --> UC_Admin
+Admin --> UC_Gen
 
-' ---- AI engine ----
-AI --> UC_GenAI
-
-' ---- use case to use case ----
-UC_Test ..> UC_Score : <<include>>
+AI --> UC_AIGen
 
 @enduml
