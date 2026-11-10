@@ -130,7 +130,7 @@ class ReviewFeedback {
 
 class AdminProfile {
     + void assignSpecialistStatus(reviewerId: UUID)
-    + void resolveDispute(reviewId: UUID, action: String)
+    + void resolveDispute(contentId: UUID, action: String)
     + void resolveFlag(flagId: UUID, newState: FlagStatus)
     + void manageUser(userId: UUID, action: String)
     + triggerAIGeneration(passageId: UUID)

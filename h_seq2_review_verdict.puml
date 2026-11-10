@@ -55,7 +55,7 @@ alt threshold reached
     C -> C : verify()
 else reviewers disagree
     note over C : conflicting verdicts are escalated to the Admin
-    ADM -> AP : resolveDispute(reviewId, action)
+    ADM -> AP : resolveDispute(contentId, action)
     activate AP
     AP -> C : verify() | reject(reason)
     deactivate AP
