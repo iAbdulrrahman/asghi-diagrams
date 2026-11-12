@@ -27,6 +27,18 @@ deactivate P
 CP --> CON : accepted or refused
 deactivate CP
 
+opt contributor abandons the claim
+    CON -> CP : releaseClaim(passageId)
+    activate CP
+    CP -> P : releaseClaim()
+    activate P
+    P -> P : changeStatus(DRAFT)
+    P -> P : claimedBy = null, claimedAt = null
+    deactivate P
+    CP --> CON : released
+    deactivate CP
+end
+
 opt reading the passage first
     CON -> CP : toggleTashkeel()
     activate CP
@@ -39,7 +51,8 @@ CP -> P : addAudio(audioFile)
 activate P
 P -> AR : new(audioFile, duration, attribution)
 activate AR
-P -> AR : status = PENDING_REVIEW
+AR -> AR : changeStatus(PENDING_REVIEW)
+P -> P : changeStatus(PENDING_REVIEW)
 P -> P : claimedAt = null
 deactivate P
 deactivate AR
