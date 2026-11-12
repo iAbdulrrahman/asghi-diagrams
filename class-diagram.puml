@@ -96,10 +96,12 @@ class Reputation {
     - int score
     - float approvalRate
     - int totalSubmissions
+    + void recordSubmissionResult(isApproved: boolean)
 }
 
 class ContributorProfile {
     + boolean claim(passageId: UUID)
+    + void releaseClaim(passageId: UUID)
     + void recordOrUploadAudio(passageId: UUID, audioFile: File)
     + void toggleTashkeel()
 }
@@ -153,13 +155,14 @@ class Passage {
     - Level level
     - String topic
     - Duration duration
+    + {static} CLAIM_TTL: Duration = 72h {readOnly}
     + boolean claim(contributorId: UUID)
     + boolean isClaimExpired()
     + void releaseClaim()
     + void addQuestion(question: Question)
     + void addAudio(audioFile: File)
     + Question getQuestion(difficulty: Difficulty)
-    + {static} Passage[] browse(level: Level, topic: String, maxDuration: Duration)
+    + {static} Passage[] browse(level: Level, topic: String, maxDuration: Duration, includeAll: boolean = false)
     + {static} Passage[] awaitingRecording()
 }
 
@@ -222,6 +225,7 @@ class TestSession {
     + boolean submitAnswer(questionId: UUID, answer: String)
     + Question nextQuestion()
     + void adaptDifficulty(isCorrect: boolean)
+    + {static} int pointsFor(difficulty: Difficulty)
     + void finishSession()
 }
 
