@@ -56,7 +56,11 @@ def usecase() -> None:
     lines = text.splitlines()
     ucs = {m.group(1) for line in lines
            for m in [re.match(r'\s*usecase\s+"[^"]+"\s+as\s+(\w+)', line)] if m}
-    direct = {m.group(1) for line in lines for m in [re.match(r"\s*\w+\s*-->\s*(\w+)\s*$", line)] if m}
+    direct = set()
+    for line in lines:
+        m = re.match(r"\s*(\w+)\s*-->\s*(\w+)\s*$", line)
+        if m:
+            direct.update([m.group(1), m.group(2)])
     included = {m.group(1) for line in lines for m in [re.match(r"\s*\w+\s*\.\.>\s*(\w+)", line)] if m}
 
     depth, inside = 0, []
