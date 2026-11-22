@@ -1,9 +1,0 @@
-# rendered outputs are tracked on purpose (they are submitted),
-# but keep OS/editor junk out of history
-Thumbs.db
-Desktop.ini
-.DS_Store
-*.tmp
-~$*
-.vscode/
-.idea/
